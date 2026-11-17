@@ -46,6 +46,8 @@ var I18N = {
     noWalletTitle: "You need a wallet app",
     noWalletText: "No wallet was found in this browser. Please install a wallet app such as MetaMask, then open this page inside that app's browser. Never share your recovery phrase or private key with anyone — this site will never ask for it.",
     connectBtn: "Connect wallet",
+    connecting: "Connecting…",
+    noWalletFound: "No wallet was found. Please open this page inside a wallet app's browser (such as MetaMask or FoxWallet), then tap “Connect wallet” again.",
     connectNote: "Tap to connect. We only read your public address — we cannot move your money by connecting.",
     yourWalletLabel: "Your wallet",
     rescanBtn: "Check again",
@@ -103,6 +105,8 @@ var I18N = {
     noWalletTitle: "ウォレットアプリが必要です",
     noWalletText: "このブラウザではウォレットが見つかりませんでした。MetaMask などのウォレットアプリを入れて、そのアプリの中のブラウザでこのページを開いてください。復旧フレーズや秘密鍵は絶対に誰にも教えないでください — このサイトが聞くことはありません。",
     connectBtn: "ウォレットをつなぐ",
+    connecting: "接続中…",
+    noWalletFound: "ウォレットが見つかりませんでした。MetaMaskやFoxWalletなどのウォレットアプリの中のブラウザでこのページを開いてから、もう一度「ウォレットをつなぐ」を押してください。",
     connectNote: "押すとつながります。あなたの公開アドレスを読むだけです — つなぐだけでお金が動くことはありません。",
     yourWalletLabel: "あなたのウォレット",
     rescanBtn: "もう一度調べる",
@@ -278,7 +282,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     function t(key, vars) { return template(S[key] || key, vars); }
     function $(id) { return document.getElementById(id); }
 
-    var state = { address: null, hawk: null, phx: null, burning: false };
+    var state = { address: null, hawk: null, phx: null, burning: false, provider: null, connecting: false, watching: false };
 
     function applyI18n() {
       document.title = lang === "ja" ? "HAWK バーン — HAWKをバーンしてPHOENIXを受け取る" : "HAWK Burn — burn HAWK, receive PHOENIX";
@@ -313,7 +317,47 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       el.textContent = msg || "";
       el.className = "result" + (kind ? " " + kind : "");
     }
-    function hasWallet() { return typeof window.ethereum !== "undefined" && window.ethereum; }
+    function provider() { return state.provider || (typeof window.ethereum !== "undefined" && window.ethereum) || null; }
+    function hasWallet() { return !!provider(); }
+
+    /* Wallet providers are often injected AFTER page load (wallet in-app
+       browsers), and modern wallets announce themselves via EIP-6963.
+       Wait briefly for one instead of trusting a one-time load check. */
+    function findProvider(waitMs) {
+      var existing = provider();
+      if (existing) return Promise.resolve(existing);
+      return new Promise(function (resolve) {
+        var done = false;
+        function finish(p) {
+          if (done) return; done = true;
+          window.removeEventListener("eip6963:announceProvider", onAnnounce);
+          window.removeEventListener("ethereum#initialized", onInit);
+          resolve(p || provider());
+        }
+        function onAnnounce(e) {
+          var p = e && e.detail && e.detail.provider;
+          if (p && typeof p.request === "function") finish(p);
+        }
+        function onInit() { if (provider()) finish(provider()); }
+        window.addEventListener("eip6963:announceProvider", onAnnounce);
+        window.addEventListener("ethereum#initialized", onInit);
+        try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
+        var started = Date.now();
+        (function poll() {
+          if (done) return;
+          if (provider()) return finish(provider());
+          if (Date.now() - started >= waitMs) return finish(null);
+          setTimeout(poll, 100);
+        })();
+      });
+    }
+
+    function watchProvider(eth) {
+      if (!eth || state.watching || typeof eth.on !== "function") return;
+      state.watching = true;
+      eth.on("accountsChanged", function () { location.reload(); });
+      eth.on("chainChanged", function () { location.reload(); });
+    }
 
     async function loadStats() {
       try {
@@ -326,7 +370,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     }
 
     async function ensureChain() {
-      var eth = window.ethereum;
+      var eth = provider();
       var current = await eth.request({ method: "eth_chainId" });
       if (current && current.toLowerCase() === CHAIN_ID_HEX) return true;
       try {
@@ -373,11 +417,22 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     }
 
     async function connect() {
-      if (!hasWallet()) return;
+      if (state.connecting) return;
       var result = $("connectResult");
+      var btn = $("connectBtn");
+      state.connecting = true;
+      if (btn) { btn.disabled = true; btn.textContent = S.connecting; }
       try {
-        var accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        if (!accounts || !accounts[0]) return;
+        var eth = await findProvider(2500);
+        if (!eth) {
+          $("noWalletPanel").hidden = false;
+          setResult(result, S.noWalletFound, "error");
+          return;
+        }
+        state.provider = eth;
+        watchProvider(eth);
+        var accounts = await eth.request({ method: "eth_requestAccounts" });
+        if (!accounts || !accounts[0]) { setResult(result, S.scanFailed, "error"); return; }
         state.address = accounts[0];
         var ok = await ensureChain();
         if (!ok) {
@@ -385,6 +440,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
           $("switchChainBtn").hidden = false;
           return;
         }
+        $("noWalletPanel").hidden = true;
         $("connectBox").hidden = true;
         $("accountBox").hidden = false;
         $("burnPanel").hidden = false;
@@ -394,6 +450,9 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       } catch (e) {
         if (e && e.code === 4001) setResult(result, S.rejected, "");
         else setResult(result, S.scanFailed, "error");
+      } finally {
+        state.connecting = false;
+        if (btn) { btn.disabled = false; btn.textContent = S.connectBtn; }
       }
     }
 
@@ -446,7 +505,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     /* ----- sending ----- */
     async function estimateGas(txParams, fallback) {
       try {
-        var hex = await window.ethereum.request({ method: "eth_estimateGas", params: [txParams] });
+        var hex = await provider().request({ method: "eth_estimateGas", params: [txParams] });
         var est = BigInt(hex);
         var withBuf = (est * 120n) / 100n;
         return "0x" + withBuf.toString(16);
@@ -454,7 +513,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     }
     async function waitReceipt(hash) {
       for (var i = 0; i < 90; i++) {
-        var r = await window.ethereum.request({ method: "eth_getTransactionReceipt", params: [hash] });
+        var r = await provider().request({ method: "eth_getTransactionReceipt", params: [hash] });
         if (r) return r;
         await new Promise(function (res) { setTimeout(res, 2000); });
       }
@@ -463,7 +522,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     async function sendTx(to, data, fallbackGas) {
       var txParams = { from: state.address, to: to, data: data };
       txParams.gas = await estimateGas(txParams, fallbackGas);
-      return window.ethereum.request({ method: "eth_sendTransaction", params: [txParams] });
+      return provider().request({ method: "eth_sendTransaction", params: [txParams] });
     }
 
     async function burn() {
@@ -531,10 +590,6 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     /* ----- wiring ----- */
     applyI18n();
     loadStats();
-    if (!hasWallet()) {
-      $("noWalletPanel").hidden = false;
-      $("connectPanel").hidden = true;
-    }
     var cb = $("connectBtn"); if (cb) cb.addEventListener("click", connect);
     var rb = $("rescanBtn"); if (rb) rb.addEventListener("click", refreshBalances);
     var sb = $("switchChainBtn");
@@ -549,10 +604,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       if (el) el.addEventListener("click", function () { setAmountFromFraction([25, 50, 75, 100][i]); });
     });
     var bb = $("burnBtn"); if (bb) bb.addEventListener("click", burn);
-    if (hasWallet() && window.ethereum.on) {
-      window.ethereum.on("accountsChanged", function () { location.reload(); });
-      window.ethereum.on("chainChanged", function () { location.reload(); });
-    }
+    if (provider()) watchProvider(provider());
     updatePreview();
   })();
 }

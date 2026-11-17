@@ -52,6 +52,18 @@ function idsOf(html) {
     check(f + " has all ids used by app.js", missing.length === 0, missing.length ? "missing: " + missing.join(",") : used.size + " ids");
   }
 
+  /* --- static: explicit wallet-connect flow (2026-11-18) --- */
+  check("connect flow waits for late-injected providers (EIP-6963 + ethereum#initialized)",
+    appSrc.includes("eip6963:announceProvider") && appSrc.includes("ethereum#initialized") && appSrc.includes("findProvider"));
+  check("connect() never fails silently (no hasWallet early-return)",
+    !appSrc.includes("if (!hasWallet()) return;") && appSrc.includes("noWalletFound"));
+  check("boot never hides the connect panel on a load-time check",
+    !appSrc.includes('$(\"connectPanel\").hidden = true'));
+  check("connect guidance strings exist in both languages",
+    (appSrc.match(/noWalletFound: "/g) || []).length === 2 && (appSrc.match(/connecting: "/g) || []).length === 2);
+  check("sending goes through the resolved provider",
+    !appSrc.includes('window.ethereum.request({ method: "eth_sendTransaction"') && appSrc.includes("provider().request"));
+
   /* --- live reads --- */
   const stats = await app.getStats();
   console.log("stats: HAWK burned so far =", app.formatToken(stats.hawkBurned, 2), "| PHOENIX supply =", app.formatToken(stats.phxSupply, 2));
