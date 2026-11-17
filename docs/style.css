@@ -1,0 +1,148 @@
+/* HAWK Burn — dark flame theme first (phoenix motif), light theme optional.
+   The phoenix lives in a fixed background layer (inline SVG in the HTML);
+   panels are translucent glass so it glows through without hurting contrast. */
+:root, :root[data-theme="dark"] {
+  --bg0:#04050d; --bg1:#0a0f26;
+  --card:rgba(15,19,40,.78); --card-solid:#0f1328;
+  --text:#f5f1e8; --muted:#b8bdd1; --line:rgba(255,170,80,.28);
+  --input-bg:rgba(0,0,0,.42); --chip:rgba(255,140,50,.12);
+  --accent:#ffb347; --green:#2fbf71; --orange:#ff7a18;
+  --shadow:0 8px 32px rgba(0,0,0,.45);
+  --warn-bg:rgba(58,18,22,.82); --warn-line:#7a343c;
+  --warn-note-bg:rgba(58,34,12,.85); --warn-note-line:#8a5a24; --warn-note-text:#ffd9a0;
+  --err:#fca5a5; --ok:#4ade80;
+  --phoenix-opacity:.20;
+}
+:root[data-theme="light"] {
+  --bg0:#fdf6ec; --bg1:#fdeeda;
+  --card:rgba(255,255,255,.86); --card-solid:#ffffff;
+  --text:#221709; --muted:#6d5b45; --line:#f0d3ac;
+  --input-bg:#ffffff; --chip:#fdf0dd;
+  --accent:#d96c00; --green:#1d9e62; --orange:#ea580c;
+  --shadow:0 2px 10px rgba(160,90,10,.10);
+  --warn-bg:#fff5f5; --warn-line:#f3c2c2;
+  --warn-note-bg:#fff7ed; --warn-note-line:#fed7aa; --warn-note-text:#9a3412;
+  --err:#b91c1c; --ok:#15803d;
+  --phoenix-opacity:.10;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  color: var(--text); line-height: 1.6; min-height: 100vh;
+  background:
+    radial-gradient(1100px 600px at 50% 108%, rgba(255,110,30,.20), rgba(255,110,30,0) 60%),
+    radial-gradient(900px 500px at 85% -10%, rgba(64,80,180,.25), rgba(64,80,180,0) 60%),
+    linear-gradient(180deg, var(--bg0), var(--bg1) 70%, var(--bg0));
+  background-attachment: fixed;
+}
+/* --- phoenix background layer (decorative, inline SVG) --- */
+.phoenix-bg {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  display: flex; align-items: flex-start; justify-content: center;
+  pointer-events: none;
+}
+.phoenix-bg svg {
+  width: min(120vw, 980px); height: auto; margin-top: 4vh;
+  opacity: var(--phoenix-opacity);
+}
+.ember { animation: ember-rise 8s linear infinite; }
+@keyframes ember-rise {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: .95; }
+  100% { transform: translateY(-300px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .ember { animation: none; } }
+header, main, footer { position: relative; z-index: 1; }
+header { padding: 20px 20px 4px; max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.brand { display: flex; align-items: center; gap: 12px; width: 100%; order: 3; }
+.brand-emoji { font-size: 40px; filter: drop-shadow(0 0 14px rgba(255,130,40,.65)); }
+h1 {
+  font-size: 30px; margin: 0; letter-spacing: .02em;
+  background: linear-gradient(92deg, #ffc93c, #ff7a18 55%, #ff512f);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+:root[data-theme="light"] h1 { -webkit-text-fill-color: #c2410c; background: none; }
+.sub { color: var(--muted); margin: 2px 0 0; font-size: 14px; }
+.lang-switch { order: 1; margin-left: auto; font-size: 13px; color: var(--muted); }
+.lang-switch select { margin-left: 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 13px; min-height: 36px; }
+.theme-toggle { order: 2; background: var(--chip); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 36px; white-space: nowrap; }
+main { max-width: 1120px; margin: 0 auto; padding: 0 20px 8px; }
+.panel {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 20px; margin: 16px 0 0; box-shadow: var(--shadow);
+  backdrop-filter: blur(12px) saturate(150%); -webkit-backdrop-filter: blur(12px) saturate(150%);
+}
+.panel.warn { background: var(--warn-bg); border-color: var(--warn-line); }
+.panel h2 { font-size: 18px; margin: 0 0 10px; }
+.panel h3 { font-size: 15px; margin: 18px 0 8px; }
+.steps { margin: 0; padding-left: 22px; line-height: 2; font-size: 15px; }
+.note { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 8px 0 0; }
+.warn-note { color: var(--warn-note-text); background: var(--warn-note-bg); border: 1px solid var(--warn-note-line); border-radius: 10px; padding: 10px 12px; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.info-card { background: var(--chip); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.i-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.i-value { font-size: 19px; font-weight: 800; word-break: break-word; }
+.big-btn { display: block; width: 100%; background: var(--orange); color: #fff; border: 0; border-radius: 12px; padding: 10px 16px; font-size: 19px; font-weight: 800; cursor: pointer; min-height: 60px; }
+.big-btn:active { transform: scale(.99); }
+.big-btn:disabled { opacity: .45; cursor: default; }
+.big-btn.burn {
+  background: linear-gradient(135deg, #ff512f, #ff7a18 48%, #ffc93c);
+  font-size: 21px; padding: 20px 16px; color: #fff;
+  text-shadow: 0 1px 3px rgba(120,30,0,.45);
+  box-shadow: 0 8px 28px rgba(255,110,30,.45), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.big-btn.burn:disabled { box-shadow: none; filter: grayscale(.35); }
+.small-btn { background: var(--card-solid); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; font-size: 15px; cursor: pointer; min-height: 44px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.mono { font-family: ui-monospace, monospace; font-size: 13px; word-break: break-all; }
+.mono-small { font-family: ui-monospace, monospace; font-size: 11px; word-break: break-all; }
+.amount-input {
+  width: 100%; font-size: 24px; font-weight: 800; padding: 14px 16px;
+  background: var(--input-bg); color: var(--text);
+  border: 1px solid var(--line); border-radius: 12px; outline: none;
+}
+.amount-input:focus { border-color: #ff7a18; box-shadow: 0 0 0 3px rgba(255,122,24,.30); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.chip {
+  flex: 1 1 0; min-width: 64px; padding: 10px 0; font-size: 15px; font-weight: 700;
+  background: var(--chip); color: var(--text); border: 1px solid var(--line);
+  border-radius: 999px; cursor: pointer; min-height: 44px;
+}
+.chip:active { transform: scale(.97); }
+.receive-box {
+  margin-top: 16px; text-align: center; padding: 14px 10px;
+  background: var(--chip); border: 1px solid var(--line); border-radius: 12px;
+}
+.receive-value { font-size: 34px; font-weight: 900; line-height: 1.15; word-break: break-word; }
+.receive-value .unit { font-size: 17px; font-weight: 700; color: var(--muted); }
+.progress { min-height: 20px; font-size: 14px; line-height: 1.6; color: var(--accent); margin: 10px 0 0; }
+.result { min-height: 20px; font-size: 14px; line-height: 1.7; margin: 10px 0 0; word-break: break-word; }
+.result.ok { color: var(--ok); }
+.result.error { color: var(--err); }
+.result a { color: var(--accent); }
+.notes { color: var(--text); line-height: 1.8; font-size: 13px; padding-left: 18px; margin: 0; }
+a { color: var(--accent); }
+footer { max-width: 1120px; margin: 0 auto; padding: 16px 20px 32px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+@media (min-width: 1024px) {
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
+  main .panel { margin-top: 20px; }
+  /* Explicit columns for every panel, as on the other Guppy sites:
+     panels appear/disappear with wallet state, so auto-placement
+     must never decide where a panel lands. */
+  #howPanel { grid-column: 1; }
+  #statsPanel { grid-column: 2; }
+  #noWalletPanel { grid-column: 1 / -1; }
+  #connectPanel { grid-column: 1; }
+  #burnPanel { grid-column: 2; }
+  .safety-panel { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  header { padding: 12px 16px 4px; }
+  main { padding: 0 16px 8px; }
+  .panel { padding: 16px; }
+  h1 { font-size: 24px; }
+  footer { padding-left: 16px; padding-right: 16px; }
+  .receive-value { font-size: 28px; }
+  .phoenix-bg svg { width: 150vw; margin-top: 2vh; }
+}
