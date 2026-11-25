@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <!-- Phoenix background: inline SVG only (no external images), decorative. -->
@@ -122,6 +122,7 @@
       <div class="row">
         <button type="button" id="rescanBtn" class="small-btn">もう一度調べる</button>
         <button type="button" id="switchChainBtn" class="small-btn" hidden>QL1に切り替える</button>
+        <button type="button" id="connectedBtn" class="small-btn">ウォレット接続中</button>
       </div>
     </div>
     <p class="result" id="connectResult" role="status"></p>
@@ -168,7 +169,16 @@
   <p><a href="https://github.com/QL1-Infinite42-Guppy-Histoire/hawk-burn" target="_blank" rel="noopener">GitHub — QL1-Infinite42-Guppy-Histoire/hawk-burn</a></p>
 </footer>
 
-<script src="app.js?v=2"></script>
+<dialog id="connDlg">
+  <h3 id="connectedTitle" data-i18n="connectedTitle">ウォレット接続中</h3>
+  <p class="quote mono" id="connAddr">—</p>
+  <div class="row">
+    <button type="button" id="disconnectBtn" class="btn danger" data-i18n="disconnectBtn">接続を解除</button>
+    <button type="button" id="connClose" class="btn small">✕</button>
+  </div>
+</dialog>
+
+<script src="app.js?v=3"></script>
 <script>
 (function(){
   var btn=document.getElementById("themeToggle");

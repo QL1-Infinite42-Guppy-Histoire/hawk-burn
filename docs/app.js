@@ -46,6 +46,8 @@ var I18N = {
     noWalletTitle: "You need a wallet app",
     noWalletText: "No wallet was found in this browser. Please install a wallet app such as MetaMask, then open this page inside that app's browser. Never share your recovery phrase or private key with anyone — this site will never ask for it.",
     connectBtn: "Connect wallet",
+    connectedTitle: "Wallet connected",
+    disconnectBtn: "Disconnect",
     connecting: "Connecting…",
     noWalletFound: "No wallet was found. Please open this page inside a wallet app's browser (such as MetaMask or FoxWallet), then tap “Connect wallet” again.",
     connectNote: "Tap to connect. We only read your public address — we cannot move your money by connecting.",
@@ -105,6 +107,8 @@ var I18N = {
     noWalletTitle: "ウォレットアプリが必要です",
     noWalletText: "このブラウザではウォレットが見つかりませんでした。MetaMask などのウォレットアプリを入れて、そのアプリの中のブラウザでこのページを開いてください。復旧フレーズや秘密鍵は絶対に誰にも教えないでください — このサイトが聞くことはありません。",
     connectBtn: "ウォレットをつなぐ",
+    connectedTitle: "ウォレット接続中",
+    disconnectBtn: "接続を解除",
     connecting: "接続中…",
     noWalletFound: "ウォレットが見つかりませんでした。MetaMaskやFoxWalletなどのウォレットアプリの中のブラウザでこのページを開いてから、もう一度「ウォレットをつなぐ」を押してください。",
     connectNote: "押すとつながります。あなたの公開アドレスを読むだけです — つなぐだけでお金が動くことはありません。",
@@ -293,6 +297,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
         statsTitle: "statsTitle", statBurnedLabel: "statBurnedLabel", statPhxLabel: "statPhxLabel",
         statsNote: "statsNote", noWalletTitle: "noWalletTitle", noWalletText: "noWalletText",
         connectBtn: "connectBtn", connectNote: "connectNote", yourWalletLabel: "yourWalletLabel",
+        connectedTitle: "connectedTitle", disconnectBtn: "disconnectBtn", connectedBtn: "connectedTitle",
         rescanBtn: "rescanBtn", switchChainBtn: "switchChainBtn",
         amountLabel: "amountLabel", receiveLabel: "receiveLabel",
         burnBtn: "burnBtn", gasNote: "gasNote",
@@ -587,10 +592,55 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       }
     }
 
+    /* ----- connected dialog / disconnect ----- */
+    /* Tapping connect while connected opens a small dialog with a
+       Disconnect choice instead of re-running the connect flow. The
+       connect button itself is hidden once connected (connectBox), so
+       the same handler is also wired to the account box's button. */
+    function onConnectClick() {
+      if (state.address) {
+        $("connAddr").textContent = state.address;
+        $("connDlg").showModal();
+        return;
+      }
+      connect();
+    }
+    async function disconnect() {
+      // Ask the wallet to revoke this site's account permission where it
+      // supports it (MetaMask: wallet_revokePermissions); either way the
+      // local state is cleared so the button returns to "Connect wallet".
+      // This site persists no "was connected" localStorage state and has
+      // no silent eth_accounts restore, so a reload cannot auto-reconnect
+      // once the revoke has landed.
+      try { await window.ethereum.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }); } catch (e) {}
+      state.address = null;
+      state.hawk = null;
+      state.phx = null;
+      state.provider = null;
+      state.connecting = false;
+      var btn = $("connectBtn");
+      if (btn) { btn.disabled = false; btn.textContent = S.connectBtn; }
+      $("walletAddr").textContent = "—";
+      $("hawkLine").textContent = "";
+      $("phxLine").textContent = "";
+      $("qomLine").textContent = "";
+      setResult($("connectResult"), "", "");
+      $("switchChainBtn").hidden = true;
+      $("accountBox").hidden = true;
+      $("burnPanel").hidden = true;
+      $("connectBox").hidden = false;
+      var inp2 = $("amountInput"); if (inp2) inp2.value = "";
+      updatePreview();
+      $("connDlg").close();
+    }
+
     /* ----- wiring ----- */
     applyI18n();
     loadStats();
-    var cb = $("connectBtn"); if (cb) cb.addEventListener("click", connect);
+    var cb = $("connectBtn"); if (cb) cb.addEventListener("click", onConnectClick);
+    var ab = $("connectedBtn"); if (ab) ab.addEventListener("click", onConnectClick);
+    var cc = $("connClose"); if (cc) cc.addEventListener("click", function () { $("connDlg").close(); });
+    var db = $("disconnectBtn"); if (db) db.addEventListener("click", disconnect);
     var rb = $("rescanBtn"); if (rb) rb.addEventListener("click", refreshBalances);
     var sb = $("switchChainBtn");
     if (sb) sb.addEventListener("click", async function () {
