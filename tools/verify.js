@@ -64,6 +64,27 @@ function idsOf(html) {
   check("sending goes through the resolved provider",
     !appSrc.includes('window.ethereum.request({ method: "eth_sendTransaction"') && appSrc.includes("provider().request"));
 
+  /* --- static: Connect button ALWAYS visible (2026-11-25) ---
+     The button is rendered unconditionally (no hidden attribute, no
+     load-time provider check hides it); provider detection happens at
+     click time; the no-wallet guidance is a notice INSIDE the connect
+     box next to the button, never a separate page-level panel. */
+  check("no-provider path keeps the connect box visible",
+    appSrc.includes('$("connectBox").hidden = false;') && appSrc.includes('$("noWalletPanel").hidden = false;'));
+  for (const f of ["en.html", "ja.html"]) {
+    const html = fs.readFileSync(path.join(__dirname, "../docs", f), "utf8");
+    const btnTag = (html.match(/<button[^>]*id="connectBtn"[^>]*>/) || [""])[0];
+    check(f + " connect button rendered with no hidden attribute",
+      !!btnTag && !/\bhidden\b/.test(btnTag), btnTag);
+    const box = html.slice(html.indexOf('id="connectBox"'), html.indexOf('id="accountBox"'));
+    check(f + " no-wallet guidance sits inside connectBox, after the button, with MetaMask deep link",
+      box.includes('id="connectBtn"') && box.includes('id="noWalletPanel"') &&
+      box.indexOf('id="connectBtn"') < box.indexOf('id="noWalletPanel"') &&
+      box.includes('id="noWalletLink"') && box.includes("https://metamask.app.link/dapp/hawk.qql1.com/"));
+    check(f + " no separate page-level noWallet panel section",
+      !html.includes('<section class="panel warn" id="noWalletPanel"'));
+  }
+
   /* --- live reads --- */
   const stats = await app.getStats();
   console.log("stats: HAWK burned so far =", app.formatToken(stats.hawkBurned, 2), "| PHOENIX supply =", app.formatToken(stats.phxSupply, 2));

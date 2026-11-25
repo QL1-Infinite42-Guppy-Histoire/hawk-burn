@@ -45,6 +45,7 @@ var I18N = {
     statsError: "Could not load the latest numbers. Please reload the page in a little while.",
     noWalletTitle: "You need a wallet app",
     noWalletText: "No wallet was found in this browser. Please install a wallet app such as MetaMask, then open this page inside that app's browser. Never share your recovery phrase or private key with anyone — this site will never ask for it.",
+    noWalletLink: "Open this page in MetaMask",
     connectBtn: "Connect wallet",
     connectedTitle: "Wallet connected",
     disconnectBtn: "Disconnect",
@@ -106,6 +107,7 @@ var I18N = {
     statsError: "最新の数字を読み込めませんでした。少し待ってからページを開き直してください。",
     noWalletTitle: "ウォレットアプリが必要です",
     noWalletText: "このブラウザではウォレットが見つかりませんでした。MetaMask などのウォレットアプリを入れて、そのアプリの中のブラウザでこのページを開いてください。復旧フレーズや秘密鍵は絶対に誰にも教えないでください — このサイトが聞くことはありません。",
+    noWalletLink: "MetaMaskでこのページを開く",
     connectBtn: "ウォレットをつなぐ",
     connectedTitle: "ウォレット接続中",
     disconnectBtn: "接続を解除",
@@ -295,7 +297,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
         step1: "step1", step2: "step2", step3: "step3", howNote: "howNote",
         contractNote: "contractNote", contractLink: "contractLink",
         statsTitle: "statsTitle", statBurnedLabel: "statBurnedLabel", statPhxLabel: "statPhxLabel",
-        statsNote: "statsNote", noWalletTitle: "noWalletTitle", noWalletText: "noWalletText",
+        statsNote: "statsNote", noWalletTitle: "noWalletTitle", noWalletText: "noWalletText", noWalletLink: "noWalletLink",
         connectBtn: "connectBtn", connectNote: "connectNote", yourWalletLabel: "yourWalletLabel",
         connectedTitle: "connectedTitle", disconnectBtn: "disconnectBtn", connectedBtn: "connectedTitle",
         rescanBtn: "rescanBtn", switchChainBtn: "switchChainBtn",
@@ -430,6 +432,11 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       try {
         var eth = await findProvider(2500);
         if (!eth) {
+          /* Genuinely no provider at CLICK time (detection is never done
+             at load): show the guidance as a notice inside the connect
+             box, NEXT TO the Connect button. The button and its box stay
+             visible — never hide or replace them on this path. */
+          $("connectBox").hidden = false;
           $("noWalletPanel").hidden = false;
           setResult(result, S.noWalletFound, "error");
           return;

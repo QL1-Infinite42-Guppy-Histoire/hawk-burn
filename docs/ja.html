@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="ql1-eagle.png">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <!-- Phoenix background: inline SVG only (no external images), decorative. -->
@@ -103,17 +103,20 @@
     <p class="result" id="statsError" role="status"></p>
   </section>
 
-  <!-- No wallet notice -->
-  <section class="panel warn" id="noWalletPanel" hidden>
-    <h2 id="noWalletTitle">ウォレットアプリが必要です</h2>
-    <p id="noWalletText"></p>
-  </section>
-
   <!-- Connect -->
   <section class="panel" id="connectPanel">
     <div id="connectBox">
       <button type="button" id="connectBtn" class="big-btn">ウォレットをつなぐ</button>
       <p class="note" id="connectNote"></p>
+      <!-- No-wallet guidance lives INSIDE the connect box, directly next
+           to the always-visible Connect button. It is only unhidden after
+           a click-time check finds genuinely no provider; it never
+           replaces or hides the button. -->
+      <div class="no-wallet-note" id="noWalletPanel" hidden>
+        <h2 id="noWalletTitle">ウォレットアプリが必要です</h2>
+        <p id="noWalletText"></p>
+        <p><a id="noWalletLink" href="https://metamask.app.link/dapp/hawk.qql1.com/ja.html" target="_blank" rel="noopener">MetaMaskでこのページを開く</a></p>
+      </div>
     </div>
     <div id="accountBox" hidden>
       <div class="i-label" id="yourWalletLabel">あなたのウォレット</div>
@@ -180,7 +183,7 @@
   </div>
 </dialog>
 
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 <script>
 (function(){
   var btn=document.getElementById("themeToggle");

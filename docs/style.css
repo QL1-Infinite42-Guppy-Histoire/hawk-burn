@@ -112,6 +112,11 @@ main { max-width: 1120px; margin: 0 auto; padding: 0 20px 8px; }
 .steps { margin: 0; padding-left: 22px; line-height: 2; font-size: 15px; }
 .note { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 8px 0 0; }
 .warn-note { color: var(--warn-note-text); background: var(--warn-note-bg); border: 1px solid var(--warn-note-line); border-left: 6px solid var(--warn-note-line); padding: 10px 12px; }
+/* No-wallet guidance: a notice INSIDE the connect box, under the
+   always-visible Connect button — never a page-level takeover panel. */
+.no-wallet-note { margin-top: 14px; color: var(--warn-note-text); background: var(--warn-note-bg); border: 1px solid var(--warn-note-line); border-left: 6px solid var(--warn-note-line); padding: 12px 14px; font-size: 14px; line-height: 1.6; }
+.no-wallet-note h2 { font-size: 15px; margin: 0 0 6px; letter-spacing: .06em; text-transform: uppercase; }
+.no-wallet-note p { margin: 6px 0 0; }
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .info-card { background: linear-gradient(180deg, var(--panel), var(--panel2)); border: 1px solid var(--line-d); box-shadow: var(--inset-panel); padding: 12px;
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
@@ -202,7 +207,6 @@ footer { max-width: 1120px; margin: 0 auto; padding: 16px 20px 32px; color: var(
      must never decide where a panel lands. */
   #howPanel { grid-column: 1; }
   #statsPanel { grid-column: 2; }
-  #noWalletPanel { grid-column: 1 / -1; }
   #connectPanel { grid-column: 1; }
   #burnPanel { grid-column: 2; }
   .safety-panel { grid-column: 1 / -1; }
