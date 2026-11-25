@@ -618,8 +618,11 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       // local state is cleared so the button returns to "Connect wallet".
       // This site persists no "was connected" localStorage state and has
       // no silent eth_accounts restore, so a reload cannot auto-reconnect
-      // once the revoke has landed.
-      try { await window.ethereum.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }); } catch (e) {}
+      // once the revoke has landed. Revoke through the RESOLVED provider
+      // (which may be an EIP-6963 provider that is not window.ethereum),
+      // captured before the state is cleared below.
+      var eth = provider();
+      try { if (eth) await eth.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] }); } catch (e) {}
       state.address = null;
       state.hawk = null;
       state.phx = null;
